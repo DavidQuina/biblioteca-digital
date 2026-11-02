@@ -1,0 +1,16 @@
+ok 1 - salud y materias
+ok 2 - registro y login (crear cuenta / ya tengo cuenta)
+ok 3 - profesor sube material (pantalla 2)
+ok 4 - profesor crea una evaluación (pantalla 3)
+ok 5 - profesor programa un parcial (pantalla 4)
+ok 6 - profesor crea un juego con su contenido (pantalla 8)
+ok 7 - resumen del inicio del profesor (pantalla 1)
+ok 8 - estudiante sincroniza su grupo (pantalla 8 estudiante)
+ok 9 - descargas: una vez, máximo 10 activas (pantallas 2 y 8 estudiante)
+ok 10 - estudiante responde la prueba y envía sin internet (pantallas 4 y 8)
+ok 11 - resultados para el profesor (pantalla 7)
+ok 12 - quién descargó qué (pantalla 6)
+ok 13 - actualizar, ocultar y borrar material (pantalla 5)
+ok 14 - datos curiosos y borrados
+# pass 14
+# fail 0

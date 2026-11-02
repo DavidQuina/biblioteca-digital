@@ -1,0 +1,92 @@
+
+📁 1. Autenticación
+  → Salud del servidor  [GET /api/salud → 200, 76 ms]
+    ✔ Responde 200
+    ✔ Estado ok
+  → Listar materias  [GET /api/materias → 200, 7 ms]
+    ✔ Responde 200
+    ✔ Trae las 6 materias
+  → Crear cuenta de profesor  [POST /api/auth/registro → 201, 65 ms]
+    ✔ Responde 201
+    ✔ Devuelve token
+    ✔ Rol profesor
+  → Crear cuenta de estudiante  [POST /api/auth/registro → 201, 56 ms]
+    ✔ Responde 201
+    ✔ Queda en 3° A
+  → Correo repetido (debe fallar)  [POST /api/auth/registro → 409, 3 ms]
+    ✔ Responde 409
+  → Iniciar sesión (ya tengo cuenta)  [POST /api/auth/login → 200, 42 ms]
+    ✔ Responde 200
+    ✔ No expone la contraseña
+  → Contraseña incorrecta (debe fallar)  [POST /api/auth/login → 401, 41 ms]
+    ✔ Responde 401
+  → Mi perfil  [GET /api/auth/yo → 200, 2 ms]
+    ✔ Responde 200
+    ✔ Es estudiante
+
+📁 2. Profesor
+  → Subir material (PDF)  [POST /api/materiales → 201, 9 ms]
+    ✔ Responde 201
+    ✔ Versión 1 y visible
+  → Listar mi material  [GET /api/materiales → 200, 7 ms]
+    ✔ Responde 200
+    ✔ Incluye el material subido
+  → Crear prueba  [POST /api/pruebas → 201, 5 ms]
+    ✔ Responde 201
+    ✔ Tiene 2 preguntas
+  → Prueba con una sola opción (debe fallar)  [POST /api/pruebas → 400, 2 ms]
+    ✔ Responde 400
+  → Programar parcial  [POST /api/parciales → 201, 5 ms]
+    ✔ Responde 201
+    ✔ Lleva el material para estudiar
+  → Subir imagen para un juego  [POST /api/juegos/imagenes → 201, 2 ms]
+    ✔ Responde 201
+  → Crear juego (une palabra e imagen)  [POST /api/juegos → 201, 4 ms]
+    ✔ Responde 201
+    ✔ Es del profesor
+  → Resumen del inicio  [GET /api/profesor/resumen → 200, 3 ms]
+    ✔ Responde 200
+    ✔ Cuenta materiales y juegos
+  → Ocultar material  [PATCH /api/materiales/1 → 200, 6 ms]
+    ✔ Responde 200
+    ✔ Queda oculto
+  → Volver a mostrar material  [PATCH /api/materiales/1 → 200, 5 ms]
+    ✔ Queda visible
+  → Actualizar archivo (nueva versión)  [PUT /api/materiales/1/archivo → 200, 5 ms]
+    ✔ Responde 200
+    ✔ Sube a versión 2
+  → Agregar dato curioso  [POST /api/datos → 201, 6 ms]
+    ✔ Responde 201
+
+📁 3. Estudiante
+  → Actualizar (sincronizar todo)  [GET /api/estudiante/sync → 200, 4 ms]
+    ✔ Responde 200
+    ✔ Trae material, pruebas, parciales y juegos
+    ✔ Límite de 10 descargas
+  → Descargar material  [GET /api/materiales/1/descargar → 200, 12 ms]
+    ✔ Responde 200
+    ✔ Envía la versión
+  → Responder prueba (en línea)  [POST /api/pruebas/1/responder → 201, 5 ms]
+    ✔ Responde 201
+    ✔ 2 de 2 correctas
+  → Enviar lo hecho sin internet  [POST /api/estudiante/enviar → 200, 5 ms]
+    ✔ Responde 200
+    ✔ No cambia la primera nota
+  → Estudiante intenta publicar (debe fallar)  [POST /api/pruebas → 403, 3 ms]
+    ✔ Responde 403
+
+📁 4. Seguimiento del profesor
+  → Resultados de la prueba  [GET /api/pruebas/1/resultados → 200, 4 ms]
+    ✔ Responde 200
+    ✔ Al menos 1 la presentó
+    ✔ Trae nota por estudiante
+  → Quién descargó qué  [GET /api/profesor/descargas → 200, 2 ms]
+    ✔ Responde 200
+    ✔ Ana aparece con descarga activa
+  → Estudiante quita la descarga  [POST /api/descargas/1/quitar → 200, 4 ms]
+    ✔ Responde 200
+    ✔ Queda quitada
+  → Sin token (debe fallar)  [GET /api/profesor/descargas → 401, 2 ms]
+    ✔ Responde 401
+
+53 de 53 pruebas pasaron ✅

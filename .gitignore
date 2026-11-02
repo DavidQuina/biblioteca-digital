@@ -1,0 +1,10 @@
+build/
+.gradle/
+.idea/
+.kotlin/
+local.properties
+*.apk
+node_modules/
+backend/data/
+backend/ngrok.exe
+*.log

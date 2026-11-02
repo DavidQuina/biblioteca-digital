@@ -1,0 +1,1328 @@
+{
+  "info": {
+    "name": "Biblioteca Digital API",
+    "description": "Colección de pruebas de la API (etapa 3: Backend). Ejecuta las carpetas en orden con el Collection Runner: cada petición guarda en variables los ids y tokens que usa la siguiente.\n\nAntes de empezar: inicia el servidor (`node server.js`) y, para las peticiones con archivo, en Postman ve a Settings → General → Working directory y elige la carpeta `postman` del proyecto.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "sufijo",
+      "value": ""
+    },
+    {
+      "key": "tokenProfesor",
+      "value": ""
+    },
+    {
+      "key": "tokenEstudiante",
+      "value": ""
+    },
+    {
+      "key": "materiaMate",
+      "value": "1"
+    },
+    {
+      "key": "materiaSociales",
+      "value": "4"
+    },
+    {
+      "key": "materialId",
+      "value": ""
+    },
+    {
+      "key": "pruebaId",
+      "value": ""
+    },
+    {
+      "key": "imagenArchivo",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación",
+      "item": [
+        {
+          "name": "Salud del servidor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/salud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "salud"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Estado ok\", () => pm.expect(pm.response.json().estado).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar materias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/materias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materias"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const m = pm.response.json();",
+                  "pm.test(\"Trae las 6 materias\", () => pm.expect(m).to.have.lengthOf(6));",
+                  "pm.collectionVariables.set(\"materiaMate\", m.find(x => x.nombre === \"Matemáticas\").id);",
+                  "pm.collectionVariables.set(\"materiaSociales\", m.find(x => x.nombre === \"Sociales\").id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cuenta de profesor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rol\": \"profesor\",\n  \"nombre\": \"Profe Marta\",\n  \"correo\": \"profe{{sufijo}}@correo.com\",\n  \"clave\": \"secreta1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"sufijo\", Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Devuelve token\", () => pm.expect(r).to.have.property(\"token\"));",
+                  "pm.test(\"Rol profesor\", () => pm.expect(r.usuario.rol).to.eql(\"profesor\"));",
+                  "pm.collectionVariables.set(\"tokenProfesor\", r.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cuenta de estudiante",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rol\": \"estudiante\",\n  \"nombre\": \"Ana Pérez\",\n  \"correo\": \"ana{{sufijo}}@correo.com\",\n  \"clave\": \"clave123\",\n  \"grado\": 3,\n  \"grupo\": \"A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Queda en 3° A\", () => { pm.expect(r.usuario.grado).to.eql(3); pm.expect(r.usuario.grupo).to.eql(\"A\"); });",
+                  "pm.collectionVariables.set(\"tokenEstudiante\", r.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Correo repetido (debe fallar)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/registro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rol\": \"profesor\",\n  \"nombre\": \"Otra\",\n  \"correo\": \"profe{{sufijo}}@correo.com\",\n  \"clave\": \"secreta1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión (ya tengo cuenta)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"profe{{sufijo}}@correo.com\",\n  \"clave\": \"secreta1\",\n  \"rol\": \"profesor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No expone la contraseña\", () => pm.expect(pm.response.json().usuario).to.not.have.property(\"clave_hash\"));",
+                  "pm.collectionVariables.set(\"tokenProfesor\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Contraseña incorrecta (debe fallar)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"profe{{sufijo}}@correo.com\",\n  \"clave\": \"equivocada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mi perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/yo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "yo"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es estudiante\", () => pm.expect(pm.response.json().rol).to.eql(\"estudiante\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Profesor",
+      "item": [
+        {
+          "name": "Subir material (PDF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/materiales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materiales"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "titulo",
+                  "value": "Las tablas del 2",
+                  "type": "text"
+                },
+                {
+                  "key": "tipo",
+                  "value": "pdf",
+                  "type": "text"
+                },
+                {
+                  "key": "materia_id",
+                  "value": "{{materiaMate}}",
+                  "type": "text"
+                },
+                {
+                  "key": "grado",
+                  "value": "3",
+                  "type": "text"
+                },
+                {
+                  "key": "grupo",
+                  "value": "A",
+                  "type": "text"
+                },
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "archivos-prueba/tablas_del_2.pdf"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const m = pm.response.json();",
+                  "pm.test(\"Versión 1 y visible\", () => { pm.expect(m.version).to.eql(1); pm.expect(m.visible).to.eql(true); });",
+                  "pm.collectionVariables.set(\"materialId\", m.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar mi material",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/materiales?materia_id={{materiaMate}}&grado=3&grupo=A",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materiales"
+              ],
+              "query": [
+                {
+                  "key": "materia_id",
+                  "value": "{{materiaMate}}"
+                },
+                {
+                  "key": "grado",
+                  "value": "3"
+                },
+                {
+                  "key": "grupo",
+                  "value": "A"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Incluye el material subido\", () => pm.expect(pm.response.json().map(m => m.id)).to.include(Number(pm.collectionVariables.get(\"materialId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pruebas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pruebas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"La Revolución Francesa\",\n  \"materia_id\": {{materiaSociales}},\n  \"grado\": 3,\n  \"grupo\": \"A\",\n  \"preguntas\": [\n    {\n      \"enunciado\": \"¿En qué año fue la Revolución Francesa?\",\n      \"opciones\": [\n        \"1789\",\n        \"1810\",\n        \"1492\"\n      ],\n      \"correcta\": 0\n    },\n    {\n      \"enunciado\": \"¿En qué país ocurrió?\",\n      \"opciones\": [\n        \"España\",\n        \"Francia\",\n        \"Italia\"\n      ],\n      \"correcta\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Tiene 2 preguntas\", () => pm.expect(pm.response.json().preguntas).to.have.lengthOf(2));",
+                  "pm.collectionVariables.set(\"pruebaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Prueba con una sola opción (debe fallar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pruebas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pruebas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Mala\",\n  \"materia_id\": {{materiaSociales}},\n  \"grado\": 3,\n  \"grupo\": \"A\",\n  \"preguntas\": [\n    {\n      \"enunciado\": \"¿?\",\n      \"opciones\": [\n        \"a\"\n      ],\n      \"correcta\": 0\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Programar parcial",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/parciales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "parciales"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Parcial de Sociales\",\n  \"fecha\": \"2026-10-15\",\n  \"aviso\": \"Repasen las clases 1 a 3\",\n  \"materia_id\": {{materiaSociales}},\n  \"grado\": 3,\n  \"grupo\": \"A\",\n  \"material_ids\": [\n    {{materialId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Lleva el material para estudiar\", () => pm.expect(pm.response.json().materiales).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subir imagen para un juego",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/juegos/imagenes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "juegos",
+                "imagenes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "imagen",
+                  "type": "file",
+                  "src": "archivos-prueba/vaca.png"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"imagenArchivo\", pm.response.json().archivo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear juego (une palabra e imagen)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/juegos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "juegos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"unir\",\n  \"titulo\": \"Animales de la granja\",\n  \"materia_id\": {{materiaMate}},\n  \"grado\": 3,\n  \"grupo\": \"A\",\n  \"parejas\": [\n    {\n      \"palabra\": \"Vaca\",\n      \"archivo\": \"{{imagenArchivo}}\"\n    },\n    {\n      \"palabra\": \"Gallina\",\n      \"imagen\": \"🐔\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Es del profesor\", () => pm.expect(pm.response.json().de_profesor).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resumen del inicio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profesor/resumen?materia_id={{materiaMate}}&grado=3&grupo=A",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profesor",
+                "resumen"
+              ],
+              "query": [
+                {
+                  "key": "materia_id",
+                  "value": "{{materiaMate}}"
+                },
+                {
+                  "key": "grado",
+                  "value": "3"
+                },
+                {
+                  "key": "grupo",
+                  "value": "A"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Cuenta materiales y juegos\", () => { pm.expect(r.materiales).to.be.above(0); pm.expect(r.juegos).to.be.above(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ocultar material",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/materiales/{{materialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materiales",
+                "{{materialId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"visible\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Queda oculto\", () => pm.expect(pm.response.json().visible).to.eql(false));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Volver a mostrar material",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/materiales/{{materialId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materiales",
+                "{{materialId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"visible\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Queda visible\", () => pm.expect(pm.response.json().visible).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar archivo (nueva versión)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/materiales/{{materialId}}/archivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materiales",
+                "{{materialId}}",
+                "archivo"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "archivo",
+                  "type": "file",
+                  "src": "archivos-prueba/tablas_del_2.pdf"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sube a versión 2\", () => pm.expect(pm.response.json().version).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Agregar dato curioso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/datos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "datos"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"materia_id\": {{materiaSociales}},\n  \"texto\": \"Bogotá se fundó en 1538.\",\n  \"enlace\": \"https://es.wikipedia.org/wiki/Bogot%C3%A1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Estudiante",
+      "item": [
+        {
+          "name": "Actualizar (sincronizar todo)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/estudiante/sync",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estudiante",
+                "sync"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test(\"Trae material, pruebas, parciales y juegos\", () => {",
+                  "  pm.expect(s.materiales).to.be.an(\"array\");",
+                  "  pm.expect(s.pruebas.length).to.be.above(0);",
+                  "  pm.expect(s.parciales.length).to.be.above(0);",
+                  "  pm.expect(s.juegos.length).to.be.above(0);",
+                  "});",
+                  "pm.test(\"Límite de 10 descargas\", () => pm.expect(s.descargas.maximo).to.eql(10));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Descargar material",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/materiales/{{materialId}}/descargar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "materiales",
+                "{{materialId}}",
+                "descargar"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Envía la versión\", () => pm.expect(pm.response.headers.get(\"X-Version\")).to.eql(\"2\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Responder prueba (en línea)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pruebas/{{pruebaId}}/responder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pruebas",
+                "{{pruebaId}}",
+                "responder"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"respuestas\": [\n    0,\n    1\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"2 de 2 correctas\", () => { pm.expect(pm.response.json().correctas).to.eql(2); pm.expect(pm.response.json().total).to.eql(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviar lo hecho sin internet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/estudiante/enviar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "estudiante",
+                "enviar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resultados\": [\n    {\n      \"prueba_id\": {{pruebaId}},\n      \"respuestas\": [\n        1,\n        1\n      ],\n      \"presentada_en\": \"2026-10-12T15:00:00Z\"\n    }\n  ],\n  \"quitadas\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"No cambia la primera nota\", () => { pm.expect(pm.response.json().resultados[0].nuevo).to.eql(false); pm.expect(pm.response.json().resultados[0].correctas).to.eql(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estudiante intenta publicar (debe fallar)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pruebas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pruebas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"X\",\n  \"materia_id\": 1,\n  \"grado\": 3,\n  \"grupo\": \"A\",\n  \"preguntas\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Seguimiento del profesor",
+      "item": [
+        {
+          "name": "Resultados de la prueba",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/pruebas/{{pruebaId}}/resultados",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "pruebas",
+                "{{pruebaId}}",
+                "resultados"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Al menos 1 la presentó\", () => pm.expect(r.presentaron).to.be.above(0));",
+                  "pm.test(\"Trae nota por estudiante\", () => pm.expect(r.por_estudiante).to.be.an(\"array\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quién descargó qué",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenProfesor}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profesor/descargas?grado=3&grupo=A",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profesor",
+                "descargas"
+              ],
+              "query": [
+                {
+                  "key": "grado",
+                  "value": "3"
+                },
+                {
+                  "key": "grupo",
+                  "value": "A"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Ana aparece con descarga activa\", () => pm.expect(pm.response.json().filas.some(f => f.nombre === \"Ana Pérez\" && f.estado === \"activa\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estudiante quita la descarga",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenEstudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/descargas/{{materialId}}/quitar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "descargas",
+                "{{materialId}}",
+                "quitar"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Queda quitada\", () => pm.expect(pm.response.json().quitada).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sin token (debe fallar)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/profesor/descargas?grado=3&grupo=A",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profesor",
+                "descargas"
+              ],
+              "query": [
+                {
+                  "key": "grado",
+                  "value": "3"
+                },
+                {
+                  "key": "grupo",
+                  "value": "A"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
