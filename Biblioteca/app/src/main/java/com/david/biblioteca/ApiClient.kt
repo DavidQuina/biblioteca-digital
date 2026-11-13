@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    //  Dirección pública de ngrok (sin https:// ni / al final)
-    //    Con esto la app funciona en cualquier red: la U, la casa o datos móviles.
-    private const val PUBLIC_HOST = "transpose-glacial-tamale.ngrok-free.dev"
+    //  Dirección pública de la API en la nube (Railway), sin https:// ni / al final.
+    //    Con esto la app funciona en cualquier red y sin encender el portátil.
+    private const val PUBLIC_HOST = "biblioteca-digital-production-46399d5c.up.railway.app"
 
     private const val PORT = 3000
     private const val EMULATOR_HOST = "10.0.2.2"   // en el emulador, 10.0.2.2 = el portátil
@@ -97,14 +97,14 @@ object ApiClient {
         return null
     }
 
-    /** Decide a dónde conectarse: emulador → portátil; celular → internet (ngrok) o Wi-Fi. */
+    /** Decide a dónde conectarse: primero la nube (Railway); si no responde, el portátil (emulador) o la Wi-Fi. */
     @Synchronized
     private fun findTarget(): Target? {
         target?.let { return it }
         val found = when {
-            isEmulator() -> Target("http", EMULATOR_HOST, PORT)
             PUBLIC_HOST.isNotBlank() &&
                     isServer("https://$PUBLIC_HOST/api/salud", 6000) -> Target("https", PUBLIC_HOST, 443)
+            isEmulator() -> Target("http", EMULATOR_HOST, PORT)
             else -> findInNetwork()?.let { Target("http", it, PORT) }
         }
         target = found
